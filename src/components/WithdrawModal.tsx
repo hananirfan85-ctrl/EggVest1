@@ -44,19 +44,19 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-100 overflow-hidden relative">
-        <div className="bg-slate-900 p-6 text-white flex items-center justify-between">
+        <div className="bg-[#C62828] p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-[#FFB300] text-slate-950 flex items-center justify-center font-black">
               <ArrowUpRight className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-bold">Request Cash Payout</h3>
-              <p className="text-slate-400 text-xs">Withdraw egg sales yields & referral earnings</p>
+              <p className="text-red-100 text-xs">Withdraw egg sales yields & referral earnings</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            className="text-red-200 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
