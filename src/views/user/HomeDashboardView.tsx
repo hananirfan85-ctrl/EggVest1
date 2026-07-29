@@ -3,21 +3,22 @@ import { User, UserPackage } from '../../types';
 import { store } from '../../services/store';
 import {
   Egg,
-  TrendingUp,
   Sparkles,
   ShoppingBag,
   ArrowUpRight,
-  ArrowDownLeft,
   Copy,
   Check,
   Share2,
   ChevronRight,
-  Award,
   Bell,
-  Layers,
+  Eye,
+  EyeOff,
+  Info,
+  Link,
+  CheckCircle2,
   Clock,
-  ShieldAlert,
-  Wallet
+  ChevronLeft,
+  Award
 } from 'lucide-react';
 
 interface HomeDashboardViewProps {
@@ -37,6 +38,8 @@ export const HomeDashboardView: React.FC<HomeDashboardViewProps> = ({
   const [pendingReward, setPendingReward] = useState({ totalAmount: 0, totalCrates: 0 });
   const [copiedCode, setCopiedCode] = useState(false);
   const [collectStatus, setCollectStatus] = useState<string | null>(null);
+  const [showBalance, setShowBalance] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     const updateData = () => {
@@ -48,7 +51,7 @@ export const HomeDashboardView: React.FC<HomeDashboardViewProps> = ({
     return store.subscribe(updateData);
   }, [currentUser.id]);
 
-  // Statistics
+  // Calculated metrics
   const totalHens = userPackages.reduce((acc, p) => acc + (p.eggCratesPerDay ? Math.round(p.eggCratesPerDay * 35) : 50), 0);
   const activeHensCount = userPackages.filter((p) => p.status === 'active').length;
   const pendingHensCount = store.getDeposits(currentUser.id).filter((d) => d.status === 'pending').length;
@@ -57,11 +60,11 @@ export const HomeDashboardView: React.FC<HomeDashboardViewProps> = ({
   const handleCollect = () => {
     const res = store.claimDailyRewards();
     if (res.success) {
-      setCollectStatus(`Harvest Success! +$${res.amountClaimed.toFixed(2)} (${res.cratesHarvested.toFixed(1)} Crates)`);
+      setCollectStatus(`+${res.cratesHarvested.toFixed(1)} Eggs Claimed ($${res.amountClaimed.toFixed(2)})`);
     } else {
       setCollectStatus(res.message);
     }
-    setTimeout(() => setCollectStatus(null), 4000);
+    setTimeout(() => setCollectStatus(null), 3500);
   };
 
   const handleCopyReferral = () => {
@@ -73,244 +76,328 @@ export const HomeDashboardView: React.FC<HomeDashboardViewProps> = ({
   const handleShareReferral = () => {
     const text = `Join EggVest Smart Poultry Investment Platform with my code: ${currentUser.referralCode}! Get automated daily egg yield payouts.`;
     if (navigator.share) {
-      navigator.share({ title: 'EggVest Invitation', text, url: window.location.origin });
+      navigator.share({ title: 'EggVest Referral', text, url: window.location.origin });
     } else {
       navigator.clipboard.writeText(text);
       alert('Referral invitation link copied to clipboard!');
     }
   };
 
+  // Time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'GOOD MORNING';
+    if (hour < 18) return 'GOOD AFTERNOON';
+    return 'GOOD EVENING';
+  };
+
+  const networkBanners = [
+    {
+      id: 1,
+      title: 'REFER & EARN',
+      subtitle: 'Share Happiness, Earn Rewards!',
+      badge: 'Get 2 Eggs FREE!',
+      desc: 'Invite friends, earn 8% commission on every hen package purchased.',
+      bg: 'from-[#B71C1C] via-[#C62828] to-[#D32F2F]',
+      image: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=600&q=80',
+    },
+    {
+      id: 2,
+      title: 'EggVest Poultry',
+      subtitle: 'Start Your Smart Farming Journey',
+      badge: 'Smarter Farming, Better Yields',
+      desc: 'Healthy Hens, Happy Life. Daily fresh eggs harvested automatically.',
+      bg: 'from-[#880E4F] via-[#C62828] to-[#E53935]',
+      image: 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?auto=format&fit=crop&w=600&q=80',
+    },
+  ];
+
   return (
-    <div className="max-w-md mx-auto sm:max-w-7xl px-4 py-5 space-y-5 pb-20">
-      {/* Top Banner / Announcement Slider */}
-      <div className="bg-gradient-to-r from-[#C62828] via-[#E53935] to-[#B71C1C] rounded-3xl p-5 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-[#FFB300]/20 rounded-full blur-xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="bg-[#FFB300] text-slate-950 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              Smart Yield Active
-            </span>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white">
-              Welcome to Egg<span className="text-[#FFB300]">Vest</span>
-            </h1>
-            <p className="text-xs text-red-100 max-w-lg leading-relaxed">
-              Co-invest in automated bio-secure poultry flocks and earn guaranteed daily egg harvest returns credited directly to your wallet.
-            </p>
+    <div className="max-w-md mx-auto sm:max-w-xl px-4 py-4 space-y-5 pb-24 font-['Poppins',sans-serif]">
+      {/* 1. TOP USER GREETING BAR */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => onNavigate('profile')}
+          className="flex items-center gap-3 text-left group cursor-pointer"
+        >
+          <div className="w-11 h-11 rounded-full bg-white border border-slate-200 shadow-xs p-0.5 flex items-center justify-center shrink-0">
+            <img
+              src={
+                currentUser.avatar ||
+                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'
+              }
+              alt={currentUser.name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
           </div>
-          <button
-            onClick={() => onNavigate('buy-hens')}
-            className="shrink-0 px-4 py-2.5 bg-[#FFB300] hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-2xl shadow-md transition cursor-pointer flex items-center gap-1.5"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Buy Hen Package</span>
-          </button>
-        </div>
+          <div>
+            <span className="text-[10px] font-extrabold tracking-widest text-slate-400 block uppercase leading-tight">
+              {getGreeting()}
+            </span>
+            <h2 className="text-base font-extrabold text-slate-900 group-hover:text-[#C62828] transition">
+              {currentUser.name}
+            </h2>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate('notifications')}
+          className="w-11 h-11 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-slate-800 hover:bg-slate-50 transition cursor-pointer relative"
+          title="Notifications"
+        >
+          <Bell className="w-5 h-5 text-slate-900" />
+          <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#C62828] animate-pulse" />
+        </button>
       </div>
 
-      {/* PORTFOLIO CARD */}
-      <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-red-50 text-[#C62828] flex items-center justify-center font-bold">
-              <Egg className="w-5 h-5 fill-[#C62828]" />
+      {/* 2. RED PORTFOLIO VALUE CARD WITH ATTACHED STAT PILLARS */}
+      <div className="space-y-2">
+        <div className="bg-gradient-to-r from-[#B71C1C] via-[#C62828] to-[#D32F2F] rounded-3xl p-5 text-white shadow-lg relative overflow-hidden space-y-4">
+          {/* Header row */}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-100/90">
+              PORTFOLIO VALUE
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer text-white/90"
+              >
+                {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => alert('Portfolio value shows your total collected and daily pending harvest eggs.')}
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer text-white/90"
+              >
+                <Info className="w-4 h-4" />
+              </button>
             </div>
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Portfolio Balance
-              </h3>
-              <p className="text-lg font-extrabold text-slate-900 leading-none">
-                ${currentUser.walletBalance.toFixed(2)}{' '}
-                <span className="text-xs font-semibold text-slate-400">USD</span>
+          </div>
+
+          {/* Main metrics & Collect Button */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  {showBalance ? Math.round(pendingReward.totalCrates * 30) : '••••'}
+                </span>
+                <span className="text-sm font-extrabold text-red-100 uppercase tracking-wider">
+                  EGGS
+                </span>
+              </div>
+              <p className="text-xs text-red-100/90 font-medium">
+                ~~ ≈ Rs {showBalance ? (currentUser.walletBalance * 280).toLocaleString() : '••••'} estimated value
               </p>
             </div>
+
+            {/* Circular Collect Button */}
+            <div className="shrink-0 flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full border-4 border-white/90 bg-white/20 p-1 flex items-center justify-center shadow-lg">
+                <button
+                  onClick={handleCollect}
+                  className="w-full h-full rounded-full bg-[#C62828] hover:bg-[#A71C1C] text-white flex flex-col items-center justify-center transition cursor-pointer active:scale-95 shadow-md group"
+                >
+                  <Egg className="w-5 h-5 fill-white group-hover:scale-110 transition" />
+                  <span className="text-[11px] font-extrabold tracking-wide uppercase mt-0.5">
+                    Collect
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-[10px] text-slate-400 font-semibold block">Total Earnings</span>
-            <span className="text-sm font-bold text-emerald-600">
-              +${currentUser.totalEarnings.toFixed(2)}
-            </span>
-          </div>
+
+          {collectStatus && (
+            <div className="bg-white/20 backdrop-blur-xs text-white text-xs font-bold p-2 rounded-xl text-center border border-white/30 animate-in fade-in">
+              {collectStatus}
+            </div>
+          )}
         </div>
 
-        {/* Collect Daily Eggs Bar */}
-        <div className="bg-amber-50/80 border border-[#FFB300]/50 rounded-2xl p-3.5 flex items-center justify-between gap-3">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-[#C62828] animate-pulse" />
-              <span className="text-xs font-bold text-slate-900">
-                Current Pending Harvest
-              </span>
+        {/* 3 Attached Bottom Stat Boxes */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {/* Stat 1: Total Hens */}
+          <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-xs flex flex-col items-center text-center space-y-1">
+            <div className="w-7 h-7 rounded-full bg-red-50 text-[#C62828] flex items-center justify-center font-bold">
+              <Egg className="w-4 h-4 fill-[#C62828]" />
             </div>
-            <p className="text-xs text-slate-600">
-              <strong className="text-[#C62828] font-bold">
-                {pendingReward.totalCrates.toFixed(1)} Crates
-              </strong>{' '}
-              (~${pendingReward.totalAmount.toFixed(2)} USD)
+            <span className="text-base font-extrabold text-slate-900 leading-none">
+              {totalHens}
+            </span>
+            <span className="text-[10px] font-bold text-slate-400">Total Hens</span>
+          </div>
+
+          {/* Stat 2: Active */}
+          <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-xs flex flex-col items-center text-center space-y-1">
+            <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <span className="text-base font-extrabold text-slate-900 leading-none">
+              {activeHensCount}
+            </span>
+            <span className="text-[10px] font-bold text-slate-400">Active</span>
+          </div>
+
+          {/* Stat 3: Pending */}
+          <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-xs flex flex-col items-center text-center space-y-1">
+            <div className="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+              <Clock className="w-4 h-4" />
+            </div>
+            <span className="text-base font-extrabold text-slate-900 leading-none">
+              {pendingHensCount}
+            </span>
+            <span className="text-[10px] font-bold text-slate-400">Pending</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. INVITE & EARN CARD */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <Link className="w-6 h-6 stroke-[2.5]" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-extrabold text-slate-900 leading-tight">Invite & Earn</h3>
+            <p className="text-xs font-mono font-bold text-slate-500 truncate mt-0.5">
+              {currentUser.referralCode}
             </p>
           </div>
-
-          <button
-            onClick={handleCollect}
-            disabled={pendingReward.totalAmount <= 0}
-            className={`px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-md ${
-              pendingReward.totalAmount > 0
-                ? 'bg-[#C62828] hover:bg-[#B71C1C] text-white animate-bounce'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            <Egg className="w-4 h-4" />
-            <span>Collect</span>
-          </button>
         </div>
 
-        {collectStatus && (
-          <p className="text-xs font-bold text-center text-[#C62828] bg-red-50 p-2 rounded-xl">
-            {collectStatus}
-          </p>
-        )}
-      </div>
-
-      {/* QUICK ACTIONS */}
-      <div className="grid grid-cols-3 gap-3">
-        <button
-          onClick={() => onNavigate('buy-hens')}
-          className="p-3.5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-[#C62828] transition flex flex-col items-center gap-1.5 cursor-pointer group"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#C62828] flex items-center justify-center group-hover:scale-110 transition">
-            <ShoppingBag className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">Buy Hens</span>
-        </button>
-
-        <button
-          onClick={onOpenDeposit}
-          className="p-3.5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-500 transition flex flex-col items-center gap-1.5 cursor-pointer group"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition">
-            <ArrowDownLeft className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">Deposit</span>
-        </button>
-
-        <button
-          onClick={onOpenWithdraw}
-          className="p-3.5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-amber-500 transition flex flex-col items-center gap-1.5 cursor-pointer group"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition">
-            <ArrowUpRight className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">Withdraw</span>
-        </button>
-      </div>
-
-      {/* STATISTICS GRID */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-sm text-center">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            Total Hens
-          </span>
-          <span className="text-lg font-extrabold text-slate-900 mt-0.5 block">
-            {totalHens}
-          </span>
-        </div>
-
-        <div className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-sm text-center">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            Active Flocks
-          </span>
-          <span className="text-lg font-extrabold text-emerald-600 mt-0.5 block">
-            {activeHensCount}
-          </span>
-        </div>
-
-        <div className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-sm text-center">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            Pending Approval
-          </span>
-          <span className="text-lg font-extrabold text-amber-600 mt-0.5 block">
-            {pendingHensCount}
-          </span>
-        </div>
-      </div>
-
-      {/* REFERRAL CARD */}
-      <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-              <Award className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-slate-900">Referral Program</h3>
-              <p className="text-[10px] text-slate-500">Earn 8% Level-1 commission on hen purchases</p>
-            </div>
-          </div>
-          <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl">
-            8% Bonus
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 flex items-center justify-between">
-            <span className="text-[10px] text-slate-400 uppercase font-bold">Code:</span>
-            <span className="font-mono text-sm font-extrabold text-slate-900">
-              {currentUser.referralCode}
-            </span>
-          </div>
-
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleCopyReferral}
-            className="p-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl transition cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition cursor-pointer"
             title="Copy Referral Code"
           >
-            {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+            {copiedCode ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
           </button>
-
           <button
             onClick={handleShareReferral}
-            className="p-2.5 bg-[#C62828] hover:bg-[#B71C1C] text-white rounded-2xl transition cursor-pointer"
-            title="Share Referral Link"
+            className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 flex items-center justify-center transition cursor-pointer"
+            title="Share Referral Code"
           >
             <Share2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* LATEST ANNOUNCEMENTS */}
-      <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-            <Bell className="w-4 h-4 text-[#C62828]" />
-            <span>Latest Announcements</span>
-          </h3>
+      {/* 4. QUICK ACTIONS SECTION */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-extrabold text-slate-900">Quick Actions</h3>
+
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
+          {/* Action 1: Buy Hens */}
           <button
-            onClick={() => onNavigate('notifications')}
-            className="text-[11px] text-[#C62828] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+            onClick={() => onNavigate('buy-hens')}
+            className="w-full p-4 hover:bg-slate-50/80 transition flex items-center justify-between cursor-pointer group text-left"
           >
-            <span>View All</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-center justify-center shrink-0 p-2">
+                <img
+                  src="https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?auto=format&fit=crop&w=120&q=80"
+                  alt="Hen in Nest"
+                  className="w-10 h-10 object-contain rounded-xl"
+                />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-[#C62828] transition">
+                  Buy Hens
+                </h4>
+                <p className="text-xs text-slate-500 font-medium">Browse the hen marketplace</p>
+              </div>
+            </div>
+
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition" />
+          </button>
+
+          {/* Action 2: Withdraw */}
+          <button
+            onClick={onOpenWithdraw}
+            className="w-full p-4 hover:bg-slate-50/80 transition flex items-center justify-between cursor-pointer group text-left"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center shrink-0 p-2">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-extrabold text-xs">
+                  🥚 🥚
+                </div>
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-emerald-700 transition">
+                  Withdraw
+                </h4>
+                <p className="text-xs text-slate-500 font-medium">Cash out your earnings</p>
+              </div>
+            </div>
+
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition" />
           </button>
         </div>
+      </div>
 
-        <div className="space-y-2.5 text-xs">
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-[#C62828] shrink-0 mt-1.5" />
-            <div>
-              <h4 className="font-bold text-slate-900">EasyPaisa & JazzCash Instant Deposit Verification</h4>
-              <p className="text-slate-500 text-[11px] mt-0.5">
-                All manual payment deposits via EasyPaisa and JazzCash are now processed within 5 to 15 minutes.
-              </p>
-            </div>
+      {/* 5. OUR NETWORK CAROUSEL SECTION */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-slate-900">Our Network</h3>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev === 0 ? networkBanners.length - 1 : prev - 1))}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-900 transition cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev === networkBanners.length - 1 ? 0 : prev + 1))}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-900 transition cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
+        </div>
 
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1.5" />
-            <div>
-              <h4 className="font-bold text-slate-900">Commercial Aviary Expansion Operational</h4>
-              <p className="text-slate-500 text-[11px] mt-0.5">
-                5,000 new Lohmann Brown layer hens have arrived at Shed Block C delivering stable egg crate yields.
-              </p>
+        {/* Carousel Card */}
+        <div className="relative overflow-hidden rounded-3xl shadow-md border border-slate-200 min-h-[160px]">
+          {networkBanners.map((banner, index) => (
+            <div
+              key={banner.id}
+              className={`transition-all duration-500 p-5 text-white bg-gradient-to-r ${banner.bg} ${
+                index === currentSlide ? 'block opacity-100' : 'hidden opacity-0'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1.5 max-w-[65%]">
+                  <span className="bg-white/20 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-xs border border-white/30">
+                    {banner.badge}
+                  </span>
+                  <h4 className="text-base font-extrabold leading-tight">{banner.title}</h4>
+                  <p className="text-xs font-bold text-amber-200">{banner.subtitle}</p>
+                  <p className="text-[11px] text-red-100/90 leading-relaxed line-clamp-2">
+                    {banner.desc}
+                  </p>
+                </div>
+
+                <div className="w-24 h-24 rounded-2xl bg-white/10 p-1 border border-white/20 shrink-0 overflow-hidden shadow-inner">
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                </div>
+              </div>
             </div>
+          ))}
+
+          {/* Dots Indicator */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+            {networkBanners.map((_, idx) => (
+              <span
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                  idx === currentSlide ? 'w-5 bg-white' : 'w-1.5 bg-white/50'
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>

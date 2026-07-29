@@ -55,9 +55,11 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Center Logo on Desktop */}
         <div className="hidden md:flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#FFB300] text-slate-950 flex items-center justify-center font-black shadow-inner">
-            <Egg className="w-5 h-5 fill-slate-950" />
-          </div>
+          <img
+            src="/src/assets/images/eggvest_app_logo_1785351725406.jpg"
+            alt="EggVest Logo"
+            className="w-9 h-9 rounded-xl object-cover border-2 border-[#FFB300] shadow-sm"
+          />
           <div>
             <span className="text-lg font-extrabold tracking-tight text-white leading-none block">
               Egg<span className="text-[#FFB300]">Vest</span>

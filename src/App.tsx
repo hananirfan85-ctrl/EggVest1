@@ -5,6 +5,7 @@ import { User } from './types';
 // Top Bar & Bottom Nav Components
 import { TopBar } from './components/TopBar';
 import { BottomNav } from './components/BottomNav';
+import { SplashScreen } from './components/SplashScreen';
 
 // Modals
 import { DepositModal } from './components/DepositModal';
@@ -33,6 +34,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User>(store.getCurrentUser());
   const [activeTab, setActiveTab] = useState<string>('home');
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [showSplash, setShowSplash] = useState(true);
 
   // Modals state
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -125,6 +127,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FC] font-['Poppins',sans-serif] text-slate-900 flex flex-col antialiased selection:bg-[#C62828] selection:text-white">
+      {/* App Splash Launch Screen */}
+      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+
       {/* Top Header Bar */}
       <TopBar
         currentUser={currentUser}
