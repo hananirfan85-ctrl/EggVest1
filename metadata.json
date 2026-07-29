@@ -1,0 +1,6 @@
+{
+  "name": "EggVest",
+  "description": "EggVest - Commercial Poultry Co-Investment & Daily Egg Yield Platform with EasyPaisa, JazzCash, and Wallet Controls",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
