@@ -1,3 +1,4 @@
+import { supabase } from './supabase';
 import {
   User,
   PoultryPackage,
@@ -12,6 +13,112 @@ import {
   AuditLog,
   NetworkBanner
 } from '../types';
+
+async function syncUserToSupabase(user: User) {
+  if (!supabase) return;
+  try {
+    await supabase.from('users').upsert({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      avatar: user.avatar,
+      kyc_status: user.kycStatus,
+      referral_code: user.referralCode,
+      referred_by: user.referredBy,
+      wallet_balance: user.walletBalance,
+      total_earnings: user.totalEarnings,
+      total_referral_earnings: user.totalReferralEarnings,
+      created_at: user.createdAt
+    });
+  } catch (err) {
+    console.warn('Supabase user sync warning:', err);
+  }
+}
+
+async function syncAuditLogToSupabase(log: AuditLog) {
+  if (!supabase) return;
+  try {
+    await supabase.from('audit_logs').insert({
+      id: log.id,
+      actor_id: log.actorId,
+      actor_name: log.actorName,
+      action: log.action,
+      target: log.target,
+      ip_address: log.ipAddress,
+      details: log.details,
+      timestamp: log.timestamp
+    });
+  } catch (err) {
+    console.warn('Supabase log sync warning:', err);
+  }
+}
+
+async function syncDepositToSupabase(dep: DepositRequest) {
+  if (!supabase) return;
+  try {
+    await supabase.from('deposits').upsert({
+      id: dep.id,
+      user_id: dep.userId,
+      user_name: dep.userName,
+      user_email: dep.userEmail,
+      amount: dep.amount,
+      payment_method: dep.paymentMethod,
+      transaction_reference: dep.transactionReference,
+      proof_image_url: dep.proofImageUrl,
+      status: dep.status,
+      notes: dep.notes,
+      admin_note: dep.adminNote,
+      created_at: dep.createdAt,
+      updated_at: dep.updatedAt
+    });
+  } catch (err) {
+    console.warn('Supabase deposit sync warning:', err);
+  }
+}
+
+async function syncWithdrawalToSupabase(w: WithdrawalRequest) {
+  if (!supabase) return;
+  try {
+    await supabase.from('withdrawals').upsert({
+      id: w.id,
+      user_id: w.userId,
+      user_name: w.userName,
+      user_email: w.userEmail,
+      amount: w.amount,
+      net_amount: w.netAmount,
+      fee: w.fee,
+      payment_method: w.payoutMethod,
+      account_details: w.accountDetails,
+      status: w.status,
+      admin_note: w.adminNote,
+      created_at: w.createdAt,
+      updated_at: w.updatedAt
+    });
+  } catch (err) {
+    console.warn('Supabase withdrawal sync warning:', err);
+  }
+}
+
+async function syncTransactionToSupabase(tx: WalletTransaction) {
+  if (!supabase) return;
+  try {
+    await supabase.from('transactions').insert({
+      id: tx.id,
+      user_id: tx.userId,
+      user_name: tx.userName,
+      type: tx.type,
+      amount: tx.amount,
+      status: tx.status,
+      description: tx.description,
+      payment_method: tx.paymentMethod,
+      created_at: tx.createdAt
+    });
+  } catch (err) {
+    console.warn('Supabase transaction sync warning:', err);
+  }
+}
 import {
   INITIAL_SETTINGS,
   INITIAL_PACKAGES,
@@ -176,6 +283,7 @@ class AppStore {
 
     this.currentUserId = existing.id;
     this.isAuthenticated = true;
+    syncUserToSupabase(existing);
     this.addAuditLog(existing.id, existing.name, 'USER_LOGIN', existing.id, 'Logged in to EggVest');
     this.notify();
 
@@ -216,6 +324,8 @@ class AppStore {
     this.users.unshift(newUser);
     this.currentUserId = newUser.id;
     this.isAuthenticated = true;
+
+    syncUserToSupabase(newUser);
 
     this.addNotification(
       newUser.id,
@@ -295,6 +405,8 @@ class AppStore {
     this.users.unshift(newUser);
     this.currentUserId = newUser.id;
 
+    syncUserToSupabase(newUser);
+
     // Add welcoming notification
     this.addNotification(
       newUser.id,
@@ -311,6 +423,10 @@ class AppStore {
 
   public updateProfile(userId: string, data: Partial<User>) {
     this.users = this.users.map(u => u.id === userId ? { ...u, ...data } : u);
+    const updatedUser = this.users.find(u => u.id === userId);
+    if (updatedUser) {
+      syncUserToSupabase(updatedUser);
+    }
     this.notify();
   }
 
@@ -550,6 +666,7 @@ class AppStore {
     };
 
     this.deposits.unshift(dep);
+    syncDepositToSupabase(dep);
 
     this.addNotification(
       currentUser.id,
@@ -580,6 +697,8 @@ class AppStore {
 
     // Deduct balance immediately into pending state
     this.users = this.users.map(u => u.id === currentUser.id ? { ...u, walletBalance: u.walletBalance - amount } : u);
+    const updatedUser = this.users.find(u => u.id === currentUser.id);
+    if (updatedUser) syncUserToSupabase(updatedUser);
 
     const wd: WithdrawalRequest = {
       id: `wd-${Date.now()}`,
@@ -596,8 +715,9 @@ class AppStore {
     };
 
     this.withdrawals.unshift(wd);
+    syncWithdrawalToSupabase(wd);
 
-    this.transactions.unshift({
+    const tx: WalletTransaction = {
       id: `tx-wd-${Date.now()}`,
       userId: currentUser.id,
       userName: currentUser.name,
@@ -608,7 +728,9 @@ class AppStore {
       description: `Withdrawal request to ${accountDetails}`,
       createdAt: new Date().toISOString(),
       paymentMethod: payoutMethod
-    });
+    };
+    this.transactions.unshift(tx);
+    syncTransactionToSupabase(tx);
 
     this.addNotification(
       currentUser.id,
@@ -871,8 +993,8 @@ class AppStore {
   }
 
   private addAuditLog(actorId: string, actorName: string, action: string, target: string, details: string) {
-    this.auditLogs.unshift({
-      id: `log-${Date.now()}`,
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       actorId,
       actorName,
       action,
@@ -880,7 +1002,9 @@ class AppStore {
       ipAddress: "127.0.0.1",
       timestamp: new Date().toISOString(),
       details
-    });
+    };
+    this.auditLogs.unshift(newLog);
+    syncAuditLogToSupabase(newLog);
   }
 
   // --- GETTERS ---
