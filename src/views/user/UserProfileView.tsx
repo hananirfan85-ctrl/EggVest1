@@ -4,8 +4,11 @@ import { User, ShieldCheck, Upload, CheckCircle2, Lock, Landmark, Smartphone } f
 
 export const UserProfileView: React.FC = () => {
   const user = store.getCurrentUser();
+  if (!user) return null;
+
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone);
+  const [avatar, setAvatar] = useState(user.avatar || '');
 
   // Bank Info
   const [bankName, setBankName] = useState(user.bankDetails?.bankName || '');
@@ -19,9 +22,11 @@ export const UserProfileView: React.FC = () => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     store.updateProfile(user.id, {
       name,
       phone,
+      avatar,
       bankDetails: { bankName, accountTitle, accountNumber, iban }
     });
     setSavedMsg("Profile and payout account details updated successfully!");
@@ -91,6 +96,17 @@ export const UserProfileView: React.FC = () => {
               type="text"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Profile Picture / Avatar URL</label>
+            <input
+              type="url"
+              placeholder="https://images.unsplash.com/..."
+              value={avatar}
+              onChange={(e) => setAvatar(e.target.value)}
               className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             />
           </div>

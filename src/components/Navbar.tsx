@@ -100,9 +100,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => onNavigate('home')}
           className="flex items-center gap-3 cursor-pointer group shrink-0"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20 group-hover:scale-105 transition duration-200">
-            <Egg className="w-6 h-6 stroke-[2.2]" />
-          </div>
+          <img
+            src="/src/assets/images/eggvest_farm_fresh_logo_1785388413796.jpg"
+            alt="EggVest Logo"
+            className="w-10 h-10 rounded-xl object-cover border-2 border-[#FFB300] shadow-md group-hover:scale-105 transition duration-200"
+          />
           <div>
             <span className="text-lg font-bold text-slate-900 tracking-tight block leading-none">
               Egg<span className="text-amber-600">Vest</span>

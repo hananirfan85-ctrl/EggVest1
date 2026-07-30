@@ -40,6 +40,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(currentUser.name);
   const [phone, setPhone] = useState(currentUser.phone);
+  const [avatar, setAvatar] = useState(currentUser.avatar || '');
   const [savedMsg, setSavedMsg] = useState(false);
 
   const handleCopyCode = () => {
@@ -50,7 +51,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    store.updateProfile(currentUser.id, { name, phone });
+    store.updateProfile(currentUser.id, { name, phone, avatar });
     setIsEditing(false);
     setSavedMsg(true);
     setTimeout(() => setSavedMsg(false), 2500);
@@ -112,6 +113,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C62828]"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-600 font-semibold mb-1">Profile Image / Avatar URL</label>
+              <input
+                type="url"
+                placeholder="https://images.unsplash.com/..."
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C62828]"
               />
             </div>

@@ -80,7 +80,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           <div className="relative z-10 flex flex-col items-center space-y-3">
             <div className="w-16 h-16 rounded-2xl bg-white p-1 shadow-md border-2 border-[#FFB300] flex items-center justify-center">
               <img
-                src="/src/assets/images/eggvest_app_logo_1785351725406.jpg"
+                src="/src/assets/images/eggvest_farm_fresh_logo_1785388413796.jpg"
                 alt="EggVest Logo"
                 className="w-full h-full object-cover rounded-xl"
               />
@@ -163,7 +163,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
                 <input
                   type="email"
                   required
-                  placeholder="hananirfan85@gmail.com"
+                  placeholder="abc@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#C62828] text-slate-900 font-bold"
@@ -226,34 +226,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* QUICK DEMO & ADMIN LOGIN BUTTONS */}
-          <div className="pt-4 border-t border-slate-100 space-y-2 text-center">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Quick Test Credentials
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleQuickAdmin}
-                className="py-2.5 px-3 bg-slate-900 hover:bg-black text-white font-extrabold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-800"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-[#FFB300]" />
-                <span>Admin Login</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleQuickDemoUser}
-                className="py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer border border-amber-200"
-              >
-                <Footprints className="w-3.5 h-3.5 text-amber-700" />
-                <span>Investor Demo</span>
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-400 mt-2">
-              Admin account email: <strong className="text-slate-700">hananirfan85@gmail.com</strong>
-            </p>
-          </div>
         </div>
       </div>
     </div>
