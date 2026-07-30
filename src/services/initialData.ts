@@ -237,7 +237,7 @@ export const MOCK_USERS: User[] = [
     email: "hananirfan85@gmail.com",
     phone: "+92 300 1234567",
     role: "admin",
-    avatar: "/src/assets/images/eggvest_app_logo_1785351725406.jpg",
+    avatar: "/src/assets/images/eggvest_farm_fresh_logo_1785388413796.jpg",
     kycStatus: "verified",
     referralCode: "OVUM-HANAN1",
     walletBalance: 50000.00,
