@@ -119,6 +119,29 @@ async function syncTransactionToSupabase(tx: WalletTransaction) {
     console.warn('Supabase transaction sync warning:', err);
   }
 }
+
+async function syncAllToSupabase(users: User[], logs: AuditLog[], deposits: DepositRequest[], withdrawals: WithdrawalRequest[], transactions: WalletTransaction[]) {
+  if (!supabase) return;
+  try {
+    for (const u of users) {
+      await syncUserToSupabase(u);
+    }
+    for (const log of logs) {
+      await syncAuditLogToSupabase(log);
+    }
+    for (const dep of deposits) {
+      await syncDepositToSupabase(dep);
+    }
+    for (const w of withdrawals) {
+      await syncWithdrawalToSupabase(w);
+    }
+    for (const tx of transactions) {
+      await syncTransactionToSupabase(tx);
+    }
+  } catch (err) {
+    console.warn('Supabase full sync error:', err);
+  }
+}
 import {
   INITIAL_SETTINGS,
   INITIAL_PACKAGES,
@@ -208,6 +231,9 @@ class AppStore {
     this.users = this.users.map((u) =>
       u.email.toLowerCase() === 'hananirfan85@gmail.com' ? { ...u, role: 'admin' as const } : u
     );
+
+    // Auto-sync initial state to Supabase when active
+    syncAllToSupabase(this.users, this.auditLogs, this.deposits, this.withdrawals, this.transactions);
   }
 
   public subscribe(listener: () => void) {
