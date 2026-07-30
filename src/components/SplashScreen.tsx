@@ -43,7 +43,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
             {/* Center circular image container */}
             <div className="w-full h-full rounded-full bg-gradient-to-br from-white to-red-50 flex items-center justify-center border-4 border-white shadow-inner overflow-hidden">
               <img
-                src="/src/assets/images/eggvest_app_logo_1785351725406.jpg"
+                src="src/assets/images/eggvest_app_logo_1785351725406.jpg"
                 alt="EggVest Logo"
                 className="w-full h-full object-cover hover:scale-105 transition duration-300"
               />
