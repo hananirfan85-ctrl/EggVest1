@@ -9,7 +9,8 @@ import {
   Notification,
   BlogPost,
   SystemSettings,
-  AuditLog
+  AuditLog,
+  NetworkBanner
 } from '../types';
 import {
   INITIAL_SETTINGS,
@@ -22,7 +23,8 @@ import {
   MOCK_WITHDRAWALS,
   MOCK_TICKETS,
   MOCK_NOTIFICATIONS,
-  MOCK_AUDIT_LOGS
+  MOCK_AUDIT_LOGS,
+  INITIAL_NETWORK_BANNERS
 } from './initialData';
 
 const STORAGE_KEYS = {
@@ -38,6 +40,8 @@ const STORAGE_KEYS = {
   SETTINGS: 'ovum_settings_v2',
   LOGS: 'ovum_logs_v2',
   BLOGS: 'ovum_blogs_v2',
+  BANNERS: 'ovum_banners_v2',
+  IS_AUTHENTICATED: 'ovum_is_authenticated_v2'
 };
 
 // Helper for localStorage
@@ -61,7 +65,8 @@ function saveToStorage<T>(key: string, value: T) {
 
 class AppStore {
   private users: User[];
-  private currentUserId: string;
+  private currentUserId: string | null;
+  private isAuthenticated: boolean;
   private packages: PoultryPackage[];
   private userPackages: UserPackage[];
   private transactions: WalletTransaction[];
@@ -72,12 +77,14 @@ class AppStore {
   private settings: SystemSettings;
   private auditLogs: AuditLog[];
   private blogs: BlogPost[];
+  private networkBanners: NetworkBanner[];
 
   private listeners: Set<() => void> = new Set();
 
   constructor() {
     this.users = loadFromStorage(STORAGE_KEYS.USERS, MOCK_USERS);
-    this.currentUserId = loadFromStorage(STORAGE_KEYS.CURRENT_USER_ID, "usr-demo");
+    this.currentUserId = loadFromStorage<string | null>(STORAGE_KEYS.CURRENT_USER_ID, null);
+    this.isAuthenticated = loadFromStorage<boolean>(STORAGE_KEYS.IS_AUTHENTICATED, false);
     this.packages = loadFromStorage(STORAGE_KEYS.PACKAGES, INITIAL_PACKAGES);
     this.userPackages = loadFromStorage(STORAGE_KEYS.USER_PACKAGES, MOCK_USER_PACKAGES);
     this.transactions = loadFromStorage(STORAGE_KEYS.TRANSACTIONS, MOCK_TRANSACTIONS);
@@ -88,6 +95,12 @@ class AppStore {
     this.settings = loadFromStorage(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
     this.auditLogs = loadFromStorage(STORAGE_KEYS.LOGS, MOCK_AUDIT_LOGS);
     this.blogs = loadFromStorage(STORAGE_KEYS.BLOGS, INITIAL_BLOGS);
+    this.networkBanners = loadFromStorage(STORAGE_KEYS.BANNERS, INITIAL_NETWORK_BANNERS);
+
+    // If current user is hananirfan85@gmail.com, ensure role is admin
+    this.users = this.users.map((u) =>
+      u.email.toLowerCase() === 'hananirfan85@gmail.com' ? { ...u, role: 'admin' as const } : u
+    );
   }
 
   public subscribe(listener: () => void) {
@@ -98,6 +111,7 @@ class AppStore {
   private notify() {
     saveToStorage(STORAGE_KEYS.USERS, this.users);
     saveToStorage(STORAGE_KEYS.CURRENT_USER_ID, this.currentUserId);
+    saveToStorage(STORAGE_KEYS.IS_AUTHENTICATED, this.isAuthenticated);
     saveToStorage(STORAGE_KEYS.PACKAGES, this.packages);
     saveToStorage(STORAGE_KEYS.USER_PACKAGES, this.userPackages);
     saveToStorage(STORAGE_KEYS.TRANSACTIONS, this.transactions);
@@ -108,25 +122,148 @@ class AppStore {
     saveToStorage(STORAGE_KEYS.SETTINGS, this.settings);
     saveToStorage(STORAGE_KEYS.LOGS, this.auditLogs);
     saveToStorage(STORAGE_KEYS.BLOGS, this.blogs);
+    saveToStorage(STORAGE_KEYS.BANNERS, this.networkBanners);
 
     this.listeners.forEach((l) => l());
   }
 
   // --- AUTH & USER ---
-  public getCurrentUser(): User {
-    const found = this.users.find(u => u.id === this.currentUserId);
-    return found || this.users[0];
+  public getIsAuthenticated(): boolean {
+    return this.isAuthenticated;
   }
 
-  public setCurrentUserId(id: string) {
-    this.currentUserId = id;
+  public getCurrentUser(): User | null {
+    if (!this.currentUserId) return null;
+    const found = this.users.find((u) => u.id === this.currentUserId);
+    if (found && found.email.toLowerCase() === 'hananirfan85@gmail.com') {
+      found.role = 'admin';
+    }
+    return found || null;
+  }
+
+  public login(email: string): { success: boolean; message: string; user?: User } {
+    const cleanEmail = email.trim().toLowerCase();
+    let existing = this.users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (!existing) {
+      if (cleanEmail === 'hananirfan85@gmail.com') {
+        existing = {
+          id: 'usr-hanan',
+          name: 'Hanan Irfan',
+          email: 'hananirfan85@gmail.com',
+          phone: '+92 300 1234567',
+          role: 'admin',
+          avatar: '/src/assets/images/eggvest_app_logo_1785351725406.jpg',
+          kycStatus: 'verified',
+          referralCode: 'OVUM-HANAN1',
+          walletBalance: 50000,
+          totalEarnings: 12500,
+          totalReferralEarnings: 3200,
+          createdAt: new Date().toISOString().split('T')[0]
+        };
+        this.users.unshift(existing);
+      } else {
+        return {
+          success: false,
+          message: 'Account not found. Please sign up to create a new EggVest account.'
+        };
+      }
+    }
+
+    if (cleanEmail === 'hananirfan85@gmail.com') {
+      existing.role = 'admin';
+    }
+
+    this.currentUserId = existing.id;
+    this.isAuthenticated = true;
+    this.addAuditLog(existing.id, existing.name, 'USER_LOGIN', existing.id, 'Logged in to EggVest');
     this.notify();
+
+    return { success: true, message: 'Logged in successfully!', user: existing };
+  }
+
+  public signUp(
+    name: string,
+    email: string,
+    phone: string,
+    referralCode?: string
+  ): { success: boolean; message: string; user?: User } {
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = this.users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (existing) {
+      return this.login(cleanEmail);
+    }
+
+    const isAdmin = cleanEmail === 'hananirfan85@gmail.com';
+
+    const newUser: User = {
+      id: `usr-${Date.now()}`,
+      name,
+      email: cleanEmail,
+      phone: phone || '+92 300 0000000',
+      role: isAdmin ? 'admin' : 'investor',
+      avatar: isAdmin ? '/src/assets/images/eggvest_app_logo_1785351725406.jpg' : undefined,
+      kycStatus: isAdmin ? 'verified' : 'unverified',
+      referralCode: `OVUM-${name.slice(0, 4).toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`,
+      referredBy: referralCode || undefined,
+      walletBalance: isAdmin ? 50000 : 0,
+      totalEarnings: 0,
+      totalReferralEarnings: 0,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    this.users.unshift(newUser);
+    this.currentUserId = newUser.id;
+    this.isAuthenticated = true;
+
+    this.addNotification(
+      newUser.id,
+      'Welcome to EggVest Smart Poultry!',
+      'Your poultry co-investment account is active. Purchase hen packages to earn daily egg yields.',
+      'info'
+    );
+
+    this.addAuditLog(newUser.id, newUser.name, 'USER_REGISTER', newUser.id, 'New user account created');
+    this.notify();
+
+    return { success: true, message: 'Account created successfully!', user: newUser };
   }
 
   public logout() {
-    this.currentUserId = MOCK_USERS[0].id;
+    this.currentUserId = null;
+    this.isAuthenticated = false;
     this.notify();
   }
+
+  // --- NETWORK BANNERS MANAGEMENT ---
+  public getNetworkBanners(): NetworkBanner[] {
+    return this.networkBanners;
+  }
+
+  public addNetworkBanner(banner: Omit<NetworkBanner, 'id'>): NetworkBanner {
+    const newBanner: NetworkBanner = {
+      id: `banner-${Date.now()}`,
+      ...banner,
+      createdAt: new Date().toISOString()
+    };
+    this.networkBanners.unshift(newBanner);
+    this.addAuditLog('usr-admin', 'Admin', 'ADD_NETWORK_BANNER', newBanner.id, `Added banner: ${banner.title}`);
+    this.notify();
+    return newBanner;
+  }
+
+  public deleteNetworkBanner(bannerId: string) {
+    this.networkBanners = this.networkBanners.filter((b) => b.id !== bannerId);
+    this.addAuditLog('usr-admin', 'Admin', 'DELETE_NETWORK_BANNER', bannerId, 'Deleted network banner');
+    this.notify();
+  }
+
+  public updateNetworkBanner(bannerId: string, data: Partial<NetworkBanner>) {
+    this.networkBanners = this.networkBanners.map((b) => (b.id === bannerId ? { ...b, ...data } : b));
+    this.notify();
+  }
+
 
   public switchRole(role: 'investor' | 'admin') {
     if (role === 'admin') {

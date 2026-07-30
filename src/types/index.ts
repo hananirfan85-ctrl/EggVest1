@@ -225,3 +225,14 @@ export interface AuditLog {
   timestamp: string;
   details: string;
 }
+
+export interface NetworkBanner {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  desc: string;
+  bg: string;
+  image: string;
+  createdAt?: string;
+}

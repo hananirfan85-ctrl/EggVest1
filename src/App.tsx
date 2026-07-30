@@ -7,6 +7,9 @@ import { TopBar } from './components/TopBar';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
 
+// Public Auth View
+import { AuthView } from './views/public/AuthView';
+
 // Modals
 import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
@@ -27,11 +30,13 @@ import { AdminDepositApprovalsView } from './views/admin/AdminDepositApprovalsVi
 import { AdminWithdrawalApprovalsView } from './views/admin/AdminWithdrawalApprovalsView';
 import { AdminSettingsView } from './views/admin/AdminSettingsView';
 import { AdminAuditLogsView } from './views/admin/AdminAuditLogsView';
+import { AdminNetworkMgmtView } from './views/admin/AdminNetworkMgmtView';
 
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<User>(store.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<User | null>(store.getCurrentUser());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(store.getIsAuthenticated());
   const [activeTab, setActiveTab] = useState<string>('home');
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showSplash, setShowSplash] = useState(true);
@@ -43,9 +48,13 @@ export default function App() {
   useEffect(() => {
     const update = () => {
       const u = store.getCurrentUser();
+      const auth = store.getIsAuthenticated();
       setCurrentUser(u);
-      const notifications = store.getNotifications(u.id);
-      setUnreadCount(notifications.filter((n) => !n.isRead).length);
+      setIsAuthenticated(auth);
+      if (u) {
+        const notifications = store.getNotifications(u.id);
+        setUnreadCount(notifications.filter((n) => !n.isRead).length);
+      }
     };
     update();
     return store.subscribe(update);
@@ -58,7 +67,27 @@ export default function App() {
 
   const isAdminView = activeTab.startsWith('admin-');
 
+  // If user is not logged in or currentUser is null, show Auth Screen
+  if (!showSplash && (!isAuthenticated || !currentUser)) {
+    return (
+      <AuthView
+        onSuccess={() => {
+          const u = store.getCurrentUser();
+          setCurrentUser(u);
+          setIsAuthenticated(true);
+          if (u?.role === 'admin') {
+            setActiveTab('admin-dashboard');
+          } else {
+            setActiveTab('home');
+          }
+        }}
+      />
+    );
+  }
+
   const renderCurrentView = () => {
+    if (!currentUser) return null;
+
     switch (activeTab) {
       // 4 Main Bottom Navigation Views
       case 'home':
@@ -99,9 +128,10 @@ export default function App() {
       // Admin Views
       case 'admin-dashboard':
         return <AdminDashboardView onNavigate={setActiveTab} />;
+      case 'admin-network':
+        return <AdminNetworkMgmtView onBack={() => setActiveTab('admin-dashboard')} />;
       case 'admin-users':
         return <AdminUserMgmtView />;
-      case 'admin-[#C62828]':
       case 'admin-packages':
         return <AdminPackageMgmtView />;
       case 'admin-deposits':
@@ -131,25 +161,27 @@ export default function App() {
       {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
 
       {/* Top Header Bar */}
-      <TopBar
-        currentUser={currentUser}
-        unreadCount={unreadCount}
-        onOpenProfile={() => setActiveTab('profile')}
-        onOpenNotifications={() => setActiveTab('notifications')}
-        onOpenAdmin={
-          currentUser.role === 'admin'
-            ? () => setActiveTab(isAdminView ? 'home' : 'admin-dashboard')
-            : undefined
-        }
-      />
+      {currentUser && (
+        <TopBar
+          currentUser={currentUser}
+          unreadCount={unreadCount}
+          onOpenProfile={() => setActiveTab('profile')}
+          onOpenNotifications={() => setActiveTab('notifications')}
+          onOpenAdmin={
+            currentUser.role === 'admin'
+              ? () => setActiveTab(isAdminView ? 'home' : 'admin-dashboard')
+              : undefined
+          }
+        />
+      )}
 
       {/* Admin Panel Sub-Header (if inside Admin Panel) */}
-      {isAdminView && (
+      {isAdminView && currentUser?.role === 'admin' && (
         <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between border-b border-slate-800 text-xs">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#FFB300]" />
             <span className="font-extrabold uppercase tracking-wider text-[#FFB300]">
-              Admin Control Mode
+              Super Admin Control Mode ({currentUser.email})
             </span>
           </div>
 
@@ -158,7 +190,7 @@ export default function App() {
             className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold flex items-center gap-1 transition cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to App</span>
+            <span>Return to Investor App</span>
           </button>
         </div>
       )}
@@ -191,3 +223,4 @@ export default function App() {
     </div>
   );
 }
+

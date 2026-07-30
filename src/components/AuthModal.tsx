@@ -23,10 +23,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Quick login or switch user
-    const users = store.getAllUsers();
-    const found = users.find(u => u.email.toLowerCase() === email.toLowerCase()) || users[0];
-    store.setCurrentUserId(found.id);
+    store.login(email || 'investor@ovumyield.com');
     onSuccess();
     onClose();
   };
@@ -40,10 +37,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
 
   const handleVerifyOTP = (e: React.FormEvent) => {
     e.preventDefault();
-    store.registerUser(name, email, phone, refCode);
+    store.signUp(name, email, phone, refCode);
     onSuccess();
     onClose();
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">

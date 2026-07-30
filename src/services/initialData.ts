@@ -200,7 +200,51 @@ export const INITIAL_BLOGS: BlogPost[] = [
   }
 ];
 
+export const INITIAL_NETWORK_BANNERS = [
+  {
+    id: "banner-1",
+    title: "REFER & EARN",
+    subtitle: "Share Happiness, Earn Rewards!",
+    badge: "Get 2 Eggs FREE!",
+    desc: "Invite friends, earn 8% commission on every hen package purchased.",
+    bg: "from-[#B71C1C] via-[#C62828] to-[#D32F2F]",
+    image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: "banner-2",
+    title: "EggVest Poultry",
+    subtitle: "Start Your Smart Farming Journey",
+    badge: "Smarter Farming, Better Yields",
+    desc: "Healthy Hens, Happy Life. Daily fresh eggs harvested automatically.",
+    bg: "from-[#880E4F] via-[#C62828] to-[#E53935]",
+    image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: "banner-3",
+    title: "Lohman Layer Flocks",
+    subtitle: "High Density Bio-Secure Poultry Units",
+    badge: "Grade-A Certified",
+    desc: "24/7 automated climate control and guaranteed daily egg crate distribution.",
+    bg: "from-[#1B5E20] via-[#2E7D32] to-[#43A047]",
+    image: "https://images.unsplash.com/photo-1598965402089-897ce52e8355?auto=format&fit=crop&w=600&q=80"
+  }
+];
+
 export const MOCK_USERS: User[] = [
+  {
+    id: "usr-hanan",
+    name: "Hanan Irfan",
+    email: "hananirfan85@gmail.com",
+    phone: "+92 300 1234567",
+    role: "admin",
+    avatar: "/src/assets/images/eggvest_app_logo_1785351725406.jpg",
+    kycStatus: "verified",
+    referralCode: "OVUM-HANAN1",
+    walletBalance: 50000.00,
+    totalEarnings: 12500.00,
+    totalReferralEarnings: 3200.00,
+    createdAt: "2026-01-01"
+  },
   {
     id: "usr-demo",
     name: "Alex Sterling",
@@ -236,6 +280,7 @@ export const MOCK_USERS: User[] = [
     createdAt: "2026-01-01"
   }
 ];
+
 
 export const MOCK_USER_PACKAGES: UserPackage[] = [
   {

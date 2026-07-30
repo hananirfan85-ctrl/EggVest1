@@ -41,11 +41,14 @@ export const HomeDashboardView: React.FC<HomeDashboardViewProps> = ({
   const [showBalance, setShowBalance] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const [networkBanners, setNetworkBanners] = useState(store.getNetworkBanners());
+
   useEffect(() => {
     const updateData = () => {
       const upkgs = store.getUserPackages(currentUser.id);
       setUserPackages(upkgs);
       setPendingReward(store.getPendingRewardsForUser(currentUser.id));
+      setNetworkBanners(store.getNetworkBanners());
     };
     updateData();
     return store.subscribe(updateData);
@@ -91,26 +94,6 @@ export const HomeDashboardView: React.FC<HomeDashboardViewProps> = ({
     return 'GOOD EVENING';
   };
 
-  const networkBanners = [
-    {
-      id: 1,
-      title: 'REFER & EARN',
-      subtitle: 'Share Happiness, Earn Rewards!',
-      badge: 'Get 2 Eggs FREE!',
-      desc: 'Invite friends, earn 8% commission on every hen package purchased.',
-      bg: 'from-[#B71C1C] via-[#C62828] to-[#D32F2F]',
-      image: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 2,
-      title: 'EggVest Poultry',
-      subtitle: 'Start Your Smart Farming Journey',
-      badge: 'Smarter Farming, Better Yields',
-      desc: 'Healthy Hens, Happy Life. Daily fresh eggs harvested automatically.',
-      bg: 'from-[#880E4F] via-[#C62828] to-[#E53935]',
-      image: 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?auto=format&fit=crop&w=600&q=80',
-    },
-  ];
 
   return (
     <div className="max-w-md mx-auto sm:max-w-xl px-4 py-4 space-y-5 pb-24 font-['Poppins',sans-serif]">

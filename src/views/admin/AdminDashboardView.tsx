@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { store } from '../../services/store';
-import { ShieldCheck, Users, Wallet, Layers, DollarSign, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Users, Wallet, Layers, DollarSign, Clock, CheckCircle2, AlertCircle, Globe } from 'lucide-react';
 
 interface AdminDashboardProps {
   onNavigate: (tab: string) => void;
@@ -93,7 +93,15 @@ export const AdminDashboardView: React.FC<AdminDashboardProps> = ({ onNavigate }
       </div>
 
       {/* Management Navigation Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+        <button
+          onClick={() => onNavigate('admin-network')}
+          className="p-4 bg-white border border-slate-200 hover:border-[#C62828] rounded-2xl text-center space-y-1 transition cursor-pointer"
+        >
+          <Globe className="w-5 h-5 mx-auto text-[#C62828]" />
+          <span className="font-bold text-xs text-slate-900 block">Our Network</span>
+        </button>
+
         <button
           onClick={() => onNavigate('admin-users')}
           className="p-4 bg-white border border-slate-200 hover:border-purple-500 rounded-2xl text-center space-y-1 transition cursor-pointer"
@@ -142,6 +150,7 @@ export const AdminDashboardView: React.FC<AdminDashboardProps> = ({ onNavigate }
           <span className="font-bold text-xs text-slate-900 block">Audit Logs</span>
         </button>
       </div>
+
     </div>
   );
 };
